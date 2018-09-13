@@ -1,10 +1,24 @@
-# Angular 6 Cli - Dynamic Components Loader
+# Angular 6 Cli - Dynamic Components Loader & Runtime Components
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 6.x
 
 ## Dynamic Components Loader
 
-Can change theme
+1. create a module PartsModule:NgModule (holder of small pieces)
+
+2. create another module DynamicModule:NgModule, which will contain our dynamic component(and reference PartsModule dynamically)
+
+3. create dynamic Template (simple approach)
+
+4. create new Component type (only if template has changed)
+
+5. create new RuntimeModule:NgModule. This module will contain the previously created Component type
+
+6. call RuntimeCompiler.compileModuleAndAllComponentsAsync(runtimeModule) to get ComponentFactory
+
+7. create an Instance of the DynamicComponent - job of the View Target placeholder and ComponentFactory
+
+8. assign @Inputs to new instance (switch from INPUT to TEXTAREA editing), consume @Outputs
 
 ## Development server
 

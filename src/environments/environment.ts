@@ -5,7 +5,7 @@
 export const environment = {
     production: false,
     api_url: '',
-    url: 'http://nab.dev.seldatdirect.com/sel2b/'
+    url: ''
 };
 
 /*

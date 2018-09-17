@@ -19,6 +19,8 @@ export class ParentHomeComponent implements OnInit, OnDestroy {
 
     public componentRef: any;
 
+    @Input() public bindings: any = {};
+
     constructor( private _compiler: Compiler,
                 private _injector: Injector,
                 private _m: NgModuleRef<any>,
@@ -27,10 +29,10 @@ export class ParentHomeComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
         const pathHTML = './assets/_themes/theme_1/pages/home.html';
-        const pathCSS = './assets/_themes/theme_1/scss/home.scss';
+        const pathCSS = './assets/_themes/theme_1/assets/scss/home.scss';
 
         Promise.all([this.templLoaderService.getHTML(pathHTML), this.templLoaderService.getCSS(pathCSS)] ).then((res) => {
-            this.createComponent( res[0], res[1] );
+            this.loadDynamicContent(res[0], res[1]);
         });
     }
 
@@ -40,47 +42,49 @@ export class ParentHomeComponent implements OnInit, OnDestroy {
         }
     }
 
-    createComponent(html, css, data?) {
+    private loadDynamicContent(tmpl: any, css: any, bindings?: any): void {
+        const dynamicComponent = this.createNewComponent(tmpl, css, bindings);
+        const dynamicModule = this.createNewComponentModule(dynamicComponent);
+
+        this._compiler.compileModuleAndAllComponentsAsync( dynamicModule ).then( ( factories ) => {
+            const factory = factories.componentFactories.find((comp) => {
+                return comp.componentType === dynamicComponent
+            });
+
+            this.componentRef = factory.create( this._injector, [], null, this._m );
+            (<HomeModel>this.componentRef.instance).users = bindings;
+            this.homeContainer.insert( this.componentRef.hostView );
+        } );
+    }
+
+    private createNewComponent(tmpl: any, css: any, bindings: any) {
         @Component({
-            template: html,
-            styles: css
+            template: tmpl,
+            styles: [css]
         })
         class HomeComponent extends BaseHomeComponent implements OnInit {
-            @Input() data: any;
-
-            constructor(private router: Router) {
-                super();
-            }
+            public bindings: any;
 
             ngOnInit() {
-
-            }
-
-            changePage() {
-                this.router.navigate(['/page-not-found']);
-                console.log('clicked!');
+                this.bindings = bindings
             }
         }
 
+        return HomeComponent;
+    }
+
+    private createNewComponentModule(componentType: any) {
         @NgModule({
             imports: [
                 RouterModule,
                 CommonModule
             ],
             declarations: [
-                HomeComponent
+                componentType
             ]
         })
-        class tmpModule { }
+        class runtimeComponentModule { }
 
-        this._compiler.compileModuleAndAllComponentsAsync( tmpModule ).then( ( factories ) => {
-            const factory = factories.componentFactories.find((comp) => {
-                return comp.componentType === HomeComponent
-            });
-
-            this.componentRef = factory.create( this._injector, [], null, this._m );
-            (<HomeModel>this.componentRef.instance).users = data;
-            this.homeContainer.insert( this.componentRef.hostView );
-        } );
+        return runtimeComponentModule;
     }
 }

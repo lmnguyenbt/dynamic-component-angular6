@@ -25,10 +25,10 @@ export class ParentPageNotFoundComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
         const pathHTML = './assets/_themes/theme_1/pages/page-not-found.html';
-        const pathCSS = './assets/_themes/theme_1/scss/page-not-found.scss';
+        const pathCSS = './assets/_themes/theme_1/assets/scss/page-not-found.scss';
 
         Promise.all([this.templLoaderService.getHTML(pathHTML), this.templLoaderService.getCSS(pathCSS)] ).then((res) => {
-            this.createComponent( res[0], res[1] );
+            this.loadDynamicContent(res[0], res[1]);
         });
     }
 
@@ -38,37 +38,49 @@ export class ParentPageNotFoundComponent implements OnInit, OnDestroy {
         }
     }
 
-    createComponent(html, css, data?) {
+    private loadDynamicContent(tmpl: any, css: any, bindings?: any): void {
+        const dynamicComponent = this.createNewComponent(tmpl, css, bindings);
+        const dynamicModule = this.createNewComponentModule(dynamicComponent);
+
+        this._compiler.compileModuleAndAllComponentsAsync( dynamicModule ).then( ( factories ) => {
+            const factory = factories.componentFactories.find((comp) => {
+                return comp.componentType === dynamicComponent
+            });
+
+            this.componentRef = factory.create( this._injector, [], null, this._m );
+            (this.componentRef.instance).users = bindings;
+            this.pageNotFoundContainer.insert( this.componentRef.hostView );
+        } );
+    }
+
+    private createNewComponent(tmpl: any, css: any, bindings: any) {
         @Component({
-            template: html,
-            styles: css
+            template: tmpl,
+            styles: [css]
         })
         class PageNotFoundComponent implements OnInit {
+            public bindings: any;
 
             ngOnInit() {
-
+                this.bindings = bindings
             }
         }
 
+        return PageNotFoundComponent;
+    }
+
+    private createNewComponentModule(componentType: any) {
         @NgModule({
             imports: [
                 RouterModule,
                 CommonModule
             ],
             declarations: [
-                PageNotFoundComponent
+                componentType
             ]
         })
-        class tmpModule { }
+        class runtimeComponentModule { }
 
-        this._compiler.compileModuleAndAllComponentsAsync( tmpModule ).then( ( factories ) => {
-            const factory = factories.componentFactories.find((comp) => {
-                return comp.componentType === PageNotFoundComponent
-            });
-
-            this.componentRef = factory.create( this._injector, [], null, this._m );
-            (this.componentRef.instance).users = data;
-            this.pageNotFoundContainer.insert( this.componentRef.hostView );
-        } );
+        return runtimeComponentModule;
     }
 }

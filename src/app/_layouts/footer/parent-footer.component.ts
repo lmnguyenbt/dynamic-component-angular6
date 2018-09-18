@@ -7,12 +7,13 @@ import {ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { BaseFooterComponent } from 'src/app/_layouts/footer/base-footer.component';
 import { FooterModel } from 'src/app/_layouts/footer/footer.model';
-import { TmplLoaderService } from 'src/app/_services/tmpl-loader.service';
+
+import { TmplService } from 'src/app/_services/tmpl.service';
 
 @Component({
     selector: 'app-footer',
     template: '<ng-template #footerContainer></ng-template>',
-    providers: [TmplLoaderService]
+    providers: [TmplService]
 })
 export class ParentFooterComponent implements OnInit, OnDestroy {
     @ViewChild( 'footerContainer', { read: ViewContainerRef } ) footerContainer: ViewContainerRef;
@@ -24,14 +25,14 @@ export class ParentFooterComponent implements OnInit, OnDestroy {
     constructor(private _compiler: Compiler,
                 private _injector: Injector,
                 private _m: NgModuleRef<any>,
-                private templLoaderService: TmplLoaderService) {
+                private tmplService: TmplService) {
     }
 
     ngOnInit() {
         const pathHTML = './assets/_themes/theme_1/pages/footer.html';
         const pathCSS = './assets/_themes/theme_1/assets/scss/footer.scss';
 
-        Promise.all([this.templLoaderService.getHTML(pathHTML), this.templLoaderService.getCSS(pathCSS)] ).then((res) => {
+        Promise.all([this.tmplService.getHTML(pathHTML), this.tmplService.getCSS(pathCSS)] ).then((res) => {
             this.loadDynamicContent(res[0], res[1]);
         });
     }

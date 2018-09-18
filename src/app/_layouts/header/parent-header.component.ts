@@ -7,13 +7,13 @@ import {ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { BaseHeaderComponent } from 'src/app/_layouts/header/base-header.component';
 import { HeaderModel } from 'src/app/_layouts/header/header.model';
-import { TmplLoaderService } from 'src/app/_services/tmpl-loader.service';
-import { NgModuleFactory } from '@angular/core';
+
+import { TmplService } from 'src/app/_services/tmpl.service';
 
 @Component({
     selector: 'app-header',
     template: '<ng-template #headerContainer></ng-template>',
-    providers: [TmplLoaderService]
+    providers: [TmplService]
 })
 export class ParentHeaderComponent implements OnInit, OnDestroy {
     @ViewChild( 'headerContainer', { read: ViewContainerRef } ) headerContainer: ViewContainerRef;
@@ -25,14 +25,14 @@ export class ParentHeaderComponent implements OnInit, OnDestroy {
     constructor(private _compiler: Compiler,
                 private _injector: Injector,
                 private _m: NgModuleRef<any>,
-                private templLoaderService: TmplLoaderService) {
+                private tmplService: TmplService) {
     }
 
     ngOnInit() {
         const pathHTML = './assets/_themes/theme_1/pages/header.html';
         const pathCSS = './assets/_themes/theme_1/assets/scss/header.scss';
 
-        Promise.all([this.templLoaderService.getHTML(pathHTML), this.templLoaderService.getCSS(pathCSS)] ).then((res) => {
+        Promise.all([this.tmplService.getHTML(pathHTML), this.tmplService.getCSS(pathCSS)] ).then((res) => {
             this.loadDynamicContent(res[0], res[1]);
         });
     }
